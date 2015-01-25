@@ -126,4 +126,10 @@ Usage similar to nc2es. Here an example:
 ```bash
 bin/query -n t1 -q '*:*'
 ```
-Searchs for all documents in the t1 container.
+Searches for all documents in the t1 container.
+
+
+Container
+-----
+This software is provided as a Docker container located here:
+<https://registry.hub.docker.com/u/the6thcolumnproject/geo-publisher/>
