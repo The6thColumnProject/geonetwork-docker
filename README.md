@@ -3,6 +3,7 @@ geonetwork-docker
 
 Docker environments for different containers and uses.
 
+Docker builds are posted on The 6th Column Project's [docker index](https://registry.hub.docker.com/repos/the6thcolumnproject/)
 
 General
 -------
