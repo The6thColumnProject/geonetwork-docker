@@ -1,3 +1,30 @@
+#**************************************************************************
+#   Copyright (c) 2012, The 6Th Column Project, LLC.                      *
+#   Written by: The codewrx.org development team .et al                   *
+#                                                                         *
+#   All rights reserved. This file is part of the:                        *
+#   The 6th Column Project, LLC / CodeWRX Software Stack                  *
+#                                                                         *
+#**************************************************************************
+#             Creates an Ubuntu 14 based image for Publisher              *
+#                                                                         *
+#                                  ##        .                            *
+#                            ## ## ##       ==                            *
+#                         ## ## ## ##      ===                            *
+#                     /""""""""""""""""\___/ ===                          *
+#                ~~~ {~~ ~~~~ ~~~ ~~~~ ~~ ~ /  ===- ~~~                   *
+#                     \______ o          __/                              *
+#                       \    \        __/                                 *
+#                        \____\______/                                    *
+#                                                                         *
+#**************************************************************************
+#                                                                         *
+#   For details, see http://6thcolumn.org/                                *
+#   Please also read this link                                            *
+#    http://6thcolumn.org/LICENSE                                         *
+#                                                                         *
+#**************************************************************************
+
 FROM ubuntu:14.04
 
 #tell debian based distros to forget about user input
