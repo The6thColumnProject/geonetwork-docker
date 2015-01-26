@@ -41,7 +41,12 @@ class ES(object):
     def getId(self, data):
         "Extract an id for the given data"
         if 'original_path' in data.get(ES.EXTRA, {}):
-            return data[ES.EXTRA]['original_path']
+            if '_id' in data[ES.EXTRA]:
+                doc_id = data[ES.EXTRA]['_id']
+                del data[ES.EXTRA]['_id']
+                return doc_id
+            else:
+                return data[ES.EXTRA]['original_path']
         else:
             return None
               
