@@ -3,6 +3,7 @@
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source $SCRIPT_DIR/../helper.sh
+local_env
 
 image="$(basename $SCRIPT_DIR)"
 
@@ -39,8 +40,10 @@ shift $((OPTIND-1))
 ((debug)) && cat <<EOF
 script=$script
 dirs=$dirs
+extdended_env=$DOCKER_EXTENDED_ENV
 EOF
 
+options="$options $DOCKER_EXTENDED_ENV"
 
 [[ "$search" ]] && options="$options --link $search:es"
 if [[ "$file" ]]; then

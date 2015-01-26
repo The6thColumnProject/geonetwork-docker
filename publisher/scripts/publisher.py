@@ -3,6 +3,8 @@
 from netCDF4 import Dataset
 import os
 import logging
+import utils
+import datetime
 
 class SimplePathParser(object):
     """Simple directory parser strategy that is initialized with a string of the form:
@@ -51,9 +53,17 @@ class NetCDFFileHandler(object):
     CONTAINER_DATA_DIR = '/data/'
     HOST_DATA_DIR_VAR = 'DATA_PATH'
     EXTRA = '__extra'
+    REMOTE_ENV = dict(DOCKER_LOCALIP='host_ip',
+                    DOCKER_LOCALHOSTNAME='hostname')
 
     def __init__(self, path_parser = None):
         self.path_parser = path_parser
+        self.default = {}
+        self.default[NetCDFFileHandler.EXTRA] = {'created' : datetime.datetime.utcnow().isoformat()}
+        for env_name, prop_name in NetCDFFileHandler.REMOTE_ENV.items():
+            if env_name in os.environ:
+                self.default[NetCDFFileHandler.EXTRA][prop_name] = os.environ[env_name]
+
 
     def __extract_from_filename(self, filename):
         
@@ -106,7 +116,7 @@ class NetCDFFileHandler(object):
                         logging.log(logging.ERROR, "Could not process %s (%s)" % (f, e)) 
 
     def get_metadata(self, filename):
-        meta = self.__extract_from_filename(filename)
+        meta = utils.dict_merge({}, self.default, self.__extract_from_filename(filename))
         with Dataset(filename, 'r') as f:
             meta['global'] = {}
             for g_att in f.ncattrs():

@@ -1,6 +1,7 @@
 #!/bin/bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source $SCRIPT_DIR/../helper.sh
+local_env
 
 #remove last param
 array=( "$@" )
@@ -20,6 +21,9 @@ else
     #this is something else...
     target="$last_arg"
 fi
+
+
+options="$options $DOCKER_EXTENDED_ENV"
 
 if [[ "$data" ]]; then
    options="$options -v $data:/data:ro -e DATA_PATH=$data"
