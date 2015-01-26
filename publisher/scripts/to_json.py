@@ -3,8 +3,10 @@
 import sys, os
 import json
 
+import utils
 from publisher import SimplePathParser, NetCDFFileHandler
 from es_api import ESFactory
+
 class SetEncoder(json.JSONEncoder):
     def default(self, obj):
         try:
@@ -12,9 +14,18 @@ class SetEncoder(json.JSONEncoder):
         except:
             return str(obj)
 
-def process(meta, elasticsearch, global_att, show=True):
+def process(meta, elasticsearch, global_att, show=True, rename_dict={}):
+    """meta :=  the complete metadata dictionary that will be stored
+    elasticsearch := some es connection or None
+    global_att := global attributes to extend the original ones
+    show := if the json craeted will get displayed to STDOUT
+    rename_dict := a dict used for renaming keys"""
     meta['global'].update(global_att)
-    meta_json = json.dumps(meta, indent=2, cls=SetEncoder) 
+    
+    #rename properties as required:
+    utils.rename_dict(meta, rename_dict)
+
+    meta_json = json.dumps(meta, indent=2, cls=SetEncoder)
     if show:
         print meta_json
     if elasticsearch:

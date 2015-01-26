@@ -64,6 +64,9 @@ class NetCDFFileHandler(object):
             if env_name in os.environ:
                 self.default[NetCDFFileHandler.EXTRA][prop_name] = os.environ[env_name]
 
+    def __get_id(self, meta):
+        "The id is build from the hostname (if present) + ':' + the file path"
+        return '%s:%s' % (meta[NetCDFFileHandler.EXTRA].get('hostname'), meta[NetCDFFileHandler.EXTRA]['original_path'])
 
     def __extract_from_filename(self, filename):
         
@@ -127,5 +130,8 @@ class NetCDFFileHandler(object):
             meta['dimensions'] = {}
             for dim in f.dimensions:
                 meta['dimensions'][dim] = self.__extract_dimension(f.dimensions[dim])
+
+        #the id will be removed when publishing and used as such
+        meta[NetCDFFileHandler.EXTRA]['_id'] = self.__get_id(meta)
         return meta
     
