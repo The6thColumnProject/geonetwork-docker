@@ -6,7 +6,7 @@
 #   The 6th Column Project, LLC / CodeWRX Software Stack                  *
 #                                                                         *
 #**************************************************************************
-#             Creates an Ubuntu 14 based image for Publisher              *
+#             Creates an Ubuntu 14 based image for Search                 *
 #                                                                         *
 #                                  ##        .                            *
 #                            ## ## ##       ==                            *
