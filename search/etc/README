@@ -1,0 +1,9 @@
+The geo-search script...
+Intended for *bare metal* installation and operation.
+May be run as a startup chkconfig file.
+Allows for easy turn-key installation of Java and Elasticsearch
+Makes it simple to do basic configuration of Elasticsearch cluster
+
+geo-search (start|stop|status|install|config)
+copy file into /etc/init.d
+run chkconfig geo-search on
