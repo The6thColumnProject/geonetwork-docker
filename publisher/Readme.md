@@ -4,11 +4,20 @@ Publisher
 
 Basics
 ------
+* Have [docker installed](https://docs.docker.com/reference/#installation)
 
-As usual, build:
+The container is automatically built.  The build resides in the docker registry as [geo-publisher](https://registry.hub.docker.com/u/the6thcolumnproject/geo-publisher/)
+
+* Fetch the container from the registry:
 
 ```
-./build
+%> docker pull the6thcolumnproject/geo-publisher
+```
+
+* Or, as is the usual case with our distributions, you may build it yourself with our script:
+
+```
+%> ./build
 ```
 
 Then you can test it by generating a json file from an nc one:
