@@ -36,12 +36,13 @@ FORCE_INSTALL=${FORCE_INSTALL:-0}
 #--------------
 #User Defined / Settable (public)
 #--------------
+install_dir=${install_dir:-"/usr/local"}
 elastic_search_version=${elastic_search_version:-${ELASTIC_SEARCH_VERSION:-"1.4.1"}}
 workdir=${workdir:-${GEO_SEARCH_INSTALL_WORKDIR:-${installer_home}/workbench/geo-search}}
 
 envfile="/etc/geo-search.env"
 
-[ -e "${envfile}" ] && source ${envfile} && ((VERBOSE)) && printf "sourcing environment from: ${envfile} \n"
+[ -e "${envfile}" ] && source ${envfile} && printf "sourcing environment from: ${envfile} \n"
 
 #--------------
 #Utility functions
@@ -57,7 +58,7 @@ dedup() {
 
 #prerequisites...
 check_prerequisites() {
-    yum install -y curl git vim emacs
+    curl --version >& /dev/null ||  yum install -y curl
     return $?
 }
 
@@ -67,12 +68,12 @@ install_java() {
     java -version >& /dev/null
     if [ $? != 0 ]; then
         printf "\nInstalling Java... \n"
-        local install_dir=/usr/local
+        local install_dir=${install_dir:-"/usr/local"}
         local workdir=/tmp/geo-publisher-playground
         (
             mkdir -p ${workdir} && cd ${workdir}
             if [ ! -e ${workdir}/jdk-8u31-linux-x64.tar.gz ]; then
-            curl -L -C - -k -b "oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u31-b13/jdk-8u31-linux-x64.tar.gz > ${workdir}/jdk-8u31-linux-x64.tar.gz
+                curl -L -C - -k -b "oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u31-b13/jdk-8u31-linux-x64.tar.gz > ${workdir}/jdk-8u31-linux-x64.tar.gz
             fi
             mkdir -p ${install_dir} && \
                 cd ${install_dir} && \
@@ -81,8 +82,11 @@ install_java() {
                 ln -s ${install_dir}/jdk1.8.0_31 ${install_dir}/jdk
             export JAVA_HOME=${install_dir}/jdk/bin/java
             echo "export JAVA_HOME=${install_dir}/jdk/bin/java" >> ${envfile}
-            export PATH=${install_dir}/jdk/bin:$PATH
-            echo "export PATH=${install_dir}/jdk/bin:$PATH" >> ${envfile}
+            
+            if [ -z "$(grep PATH /etc/geo-search.env | grep /usr/local/jdk/bin)" ]; then
+                export PATH=${install_dir}/jdk/bin:$PATH
+                echo "export PATH=${install_dir}/jdk/bin:$PATH" >> ${envfile}
+            fi
             dedup ${envfile} && source ${envfile}
         )
     else
@@ -93,7 +97,7 @@ install_java() {
 #install elasticsearch
 install_elasticsearch() {
     echo -n "Checking for elasticsearch... "
-    local install_dir=/usr/local
+    local install_dir=${install_dir:-"/usr/local"}
     if [ ! -x ${install_dir}/elasticsearch/bin/elasticsearch ]; then
         (
             printf "\nInstalling Elasticsearch... \n"
@@ -109,17 +113,17 @@ install_elasticsearch() {
 
 config_elasticsearch() {
     echo "Configuring Elasticsearch... "
-    local install_dir=/usr/local
+    local install_dir=${install_dir:-"/usr/local"}
     (
         mkdir -p ${install_dir}/elasticsearch-${elastic_search_version}/config && cd ${install_dir}/elasticsearch-${elastic_search_version}/config
         if [ ! -e ${install_dir}/elasticsearch-${elastic_search_version}/config/elasticsearch.yml ]; then 
-            curl --progress-bar -L -C - -k https://raw.githubusercontent.com/estani/geonetwork-docker/master/search/config/elasticsearch.yml > elasticsearch.yml
+            curl --progress-bar -L -C - -k https://raw.githubusercontent.com/the6thcolumnproject/geonetwork-docker/master/search/config/elasticsearch.yml > elasticsearch.yml
         else
             echo "already present: ${install_dir}/elasticsearch-${elastic_search_version}/config/elasticsearch.yml"
         fi
 
         if [ ! -e ${install_dir}/elasticsearch-${elastic_search_version}/config/logging.yml ]; then
-            curl --progress-bar -L -C - -k https://github.com/estani/geonetwork-docker/blob/master/search/config/logging.yml > logging.yml
+            curl --progress-bar -L -C - -k https://github.com/the6thcolumnproject/geonetwork-docker/blob/master/search/config/logging.yml > logging.yml
         else
             echo "already present: ${install_dir}/elasticsearch-${elastic_search_version}/config/logging.yml"
         fi
@@ -129,11 +133,24 @@ config_elasticsearch() {
         #-------
         #Ex:
         echo "rewriting configuration file... elasticsearch.yml"
+
         # cluster.name: geo-search-cluster
-        sed -i -r 's#^[ ]*(cluster\.name:)[ ]*(.*)$#\1 '${cluster_name}'#g' elasticsearch.yml
+        [ -n "${cluster_name}" ] && sed -i -r 's#^[ ]*(cluster\.name:)[ ]*(.*)$#\1 '${cluster_name}'#g' elasticsearch.yml && \
+            echo "cluster_name=${cluster_name}" >> ${envfile}
+
+
         # network.host: 10.0.0.228
-        sed -i -r 's#^[ ]*(network\.host:)[ ]*(.*)$#\1 '${network_host}'#g' elasticsearch.yml
+        [ -n "${network_host}" ] && sed -i -r 's#^[ ]*(network\.host:)[ ]*(.*)$#\1 '${network_host}'#g' elasticsearch.yml && \
+            echo "network_host=${network_host}" >> ${envfile}
+
+        
         # discovery.zen.ping.unicast.hosts: ["10.0.0.228", "10.0.0.235", "10.0.0.238"]
+        if [ -n "${discovery_zen_ping_unicast_hosts}" ]; then
+            local tmp=[$(echo ${discovery_zen_ping_unicast_hosts[*]} | sed 's/[^ ][^ ]*/"&"/g' | sed 's/ /, /g')]
+            tmp="temp" #zoiks FIX ME
+            sed -i -r 's#^[ ]*(discovery\.zen\.ping\.unicast\.hosts:)[ ]*(.*)$#\1 '${tmp}'#g' elasticsearch.yml
+            echo "discovery_zen_ping_unicast_hosts=(${discovery_zen_ping_unicast_hosts[*]})" >> ${envfile}
+        fi
         
         #-------
         #We know we can set these (see installation code)
@@ -141,38 +158,90 @@ config_elasticsearch() {
         local path_data=${path_data:-${install_dir}/elasticsearch_data/data}
         # path.data: /usr/local/elasticsearch_data/data
         sed -i -r 's#^[ ]*(path\.data:)[ ]*(.*)$#\1 '${path_data}'#g' elasticsearch.yml
+        echo "path_data=${path_data}" >> ${envfile}
 
         local path_logs=${path_logs:-${install_dir}/elasticsearch_data/log}
         # path.logs: /usr/local/elasticsearch_data/log
         sed -i -r 's#^[ ]*(path\.logs:)[ ]*(.*)$#\1 '${install_dir}/elasticsearch_data/log'#g' elasticsearch.yml
+        echo "path_logs=${path_logs}" >> ${envfile}
+
+        dedup ${envfile} && source ${envfile}
     )
 }
 
-#TODO 
-#Fire up startup script (to be written)
+#-----------------------------------------------
+# Startup Script Lifecycle functions...
+#-----------------------------------------------
+pid_file=${install_dir}/elasticsearch_data/var/run/elasticsearch.pid
 
 start() {
-    echo "starting... geo-search "
+    echo "Starting geo-search (Elasticsearch)"
+    ${install_dir}/elasticsearch/bin/elasticsearch -p ${pid_file}
 }
 
 stop() {
-    echo "stopping... geo-search "
-
+    echo "Stopping geo-search (Elasticsearch)"
+    [ -e "${pid_file}" ] && kill $(cat "$pid_file")
 }
 
 status() {
-    echo "status... geo-search "
-    #Notes: To check the server health:
-    #curl -XGET 'http://10.0.0.238:9200/_cluster/health?pretty=true'
+    echo "Status geo-search (Elasticsearch)"
+    ps -elf | grep $(cat $pid_file)
+    curl -XGET http://${network_host}:9200/_cluster/health?pretty=true
+    return $?
 }
 
 install() {
     echo "Installing... geo-search "
-    
+    #check_prerequisites && \
+        install_java && \
+        install_elasticsearch && \
+        config_elasticsearch
+}
+
+#-----
+
+usage() {
+    printf "
+ Usage:
+ geo-search [start|stop|status|install|config]
+
+"
+    exit 0
 }
 
 main() {
-    echo "Welcome to geo-search..."
+    while [ -n "${1}" ]; do
+        case $1 in
+            start)
+                shift
+                start $@
+                break
+                ;;
+            stop)
+                shift
+                stop $@
+                break
+                ;;
+            status)
+                shift
+                status $@
+                break
+                ;;
+            install)
+                shift
+                install $@
+                break
+                ;;
+            config)
+                shift
+                config_elasticsearch $@
+                break
+                ;;
+            *|--help)
+                usage
+        esac
+    done
 }
 
-#main $@
+main $@
