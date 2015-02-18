@@ -71,7 +71,7 @@ no point in definin elast search parameters but you may define the rest.
 
 A more elaborate example:
 ```bash
-bin/nc2json --dir-structure '/*/*/*/model/*/institute' \
+$> bin/nc2json --dir-structure '/*/*/*/model/*/institute' \
     --file-structure 'simulation_*_ensemble' \
     --include-crawl '.*\.nc$' \
     --exclude-crawl '.*/test/.*' \
@@ -107,20 +107,20 @@ For this there are two main usages:
 1. For connecting to some container instance:
 
     ```bash
-    bin/nc2es -n some_container [options like nc2json] 
+    $> bin/nc2es -n some_container [options like nc2json] 
     ```
     
 2. For connecting to some external instance (be warn that this is run within a container, so it might not see what you think)
 
     ```bash 
-    bin/nc2es --host elasticsearch.host -p 9200 [options like nc2json] 
+    $> bin/nc2es --host elasticsearch.host -p 9200 [options like nc2json] 
     ```
 
 ### Debugging
 
 As usual you can get an into the container itself by running it interactively:
 ```bash
-./run -i -D .
+$> ./run -i -D .
 ```
 The `-D` flag is sharing the given directory and mounting it in /data inside the container.
 
@@ -133,7 +133,7 @@ i.e. the network you see is not the same this container will see.
 
 Usage similar to nc2es. Here an example:
 ```bash
-bin/query -n t1 -q '*:*'
+$> bin/query -n t1 -q '*:*'
 ```
 Searches for all documents in the t1 container.
 
