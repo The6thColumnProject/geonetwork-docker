@@ -125,7 +125,7 @@ As usual you can get an into the container itself by running it interactively:
 The `-D` flag is sharing the given directory and mounting it in /data inside the container.
 
 
-query
+query (using the local, bespoke, query tool)
 -----
 
 Used for searching in elastic search. Be warned that this script runs within a container,
@@ -136,6 +136,15 @@ Usage similar to nc2es. Here an example:
 bin/query -n t1 -q '*:*'
 ```
 Searches for all documents in the t1 container.
+
+query (using RESTful API)
+-----
+
+The most basic query is just go get everything.
+```bash
+bin/query -n t1 -q '*:*'
+```
+
 
 
 Container
