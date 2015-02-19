@@ -204,7 +204,14 @@ install() {
 usage() {
     printf "
  Usage:
- geo-search [start|stop|status|install|config]
+
+ >  geo-search [start|stop|status|install <args> |config <args>]
+
+    args:=  cluster-name <name>
+            network-host <ip>
+            discovery-hosts [ <ip> ... ]     square brackets here are literal!!!
+            path-data <path to data dir>
+            path-logs <path to logs dir>
 
 "
     exit 0
@@ -228,14 +235,59 @@ main() {
                 status $@
                 break
                 ;;
-            install)
+            config|install)
+                local flag=$1
                 shift
-                install $@
+                #Set global scope vars to be used in either called function below
+                while [ -n "${1}" ]; do
+                    case $1 in
+                        cluster-name)
+                            shift
+                            cluster_name=$1
+                            break
+                            ;;
+                        network-host)
+                            shift
+                            network_host=$1
+                            break
+                            ;;
+                        path-data)
+                            shift
+                            path_data=$1
+                            break
+                            ;;
+                        path-logs)
+                            shift
+                            path-logs=$1
+                            break
+                            ;;
+                        discovery-hosts)
+                            shift
+                            local tmpargs="" #array to store args for this switch.
+                            local let index=0
+                            ! echo "${1}" |  egrep "^\[.*$" && echo "break"
+                            shift
+                            until [ $(echo $1 | egrep '^.*\]$') ]; do
+                                tmpargs[((index++))]=$1
+                                echo "added $1 to args list: ${tmpargs[@]}"
+                                shift
+                            done
+                            discovery_zen_ping_unicast_hosts=${tmpargs[@]}
+                            unset tmpargs
+                            break
+                            ;;
+                        *)
+                            break
+                            ;;
+                    esac
+                done
+                [ "install" = "${flag}" ] && install
+                [ "config" = "${flag}" ] && config_elasticsearch $@
                 break
                 ;;
-            config)
+            uninstall)
                 shift
-                config_elasticsearch $@
+                echo "Not yet implemented"
                 break
                 ;;
             *|--help)
