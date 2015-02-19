@@ -146,9 +146,10 @@ config_elasticsearch() {
         
         # discovery.zen.ping.unicast.hosts: ["10.0.0.228", "10.0.0.235", "10.0.0.238"]
         if [ -n "${discovery_zen_ping_unicast_hosts}" ]; then
-            local tmp=[$(echo ${discovery_zen_ping_unicast_hosts[*]} | sed 's/[^ ][^ ]*/"&"/g' | sed 's/ /, /g')]
-            tmp="temp" #zoiks FIX ME
-            sed -i -r 's#^[ ]*(discovery\.zen\.ping\.unicast\.hosts:)[ ]*(.*)$#\1 '${tmp}'#g' elasticsearch.yml
+            local tmp="[$(echo ${discovery_zen_ping_unicast_hosts[*]} | sed 's/[^ ][^ ]*/"&"/g' | sed 's/ /, /g')]"
+            #echo $tmp
+            echo "sed -i -r 's@^[ ]*(discovery\.zen\.ping\.unicast\.hosts:)[ ]*(.*)@\1 $(echo ${tmp})@g' elasticsearch.yml"
+            sed -i -r 's@^[ ]*(discovery\.zen\.ping\.unicast\.hosts:)[ ]*(.*)@\1 '$(echo ${tmp})'@g' elasticsearch.yml
             echo "discovery_zen_ping_unicast_hosts=(${discovery_zen_ping_unicast_hosts[*]})" >> ${envfile}
         fi
         
@@ -209,7 +210,7 @@ usage() {
 
     args:=  cluster-name <name>
             network-host <ip>
-            discovery-hosts [ <ip> ... ]     square brackets here are literal!!!
+            discovery-hosts [ <ip>, ... ]     square brackets here are literal!!! comma delimited
             path-data <path to data dir>
             path-logs <path to logs dir>
 
