@@ -54,6 +54,20 @@ dedup() {
     local tmp=$(tac ${infile} | awk 'BEGIN {FS="[ =]"} !($2 in a) {a[$2];print $0}' | sort -k2,2)
     echo "$tmp" > ${infile}
 }
+
+array_to_str() {
+    local a=( "$@" )
+    local str='["'
+    for i in "$@"; do
+        str="${str}$i\", \""
+    done
+    if ((${#str} > 2)); then str="${str:0:((${#str}-4))}"; fi
+    echo "$str\"]"
+}
+
+#another way to turn an array int a string:
+#tmp="[$(echo ${discovery_zen_ping_unicast_hosts[*]} | sed 's/[^ ][^ ]*/"&"/g' | sed 's/ /, /g')]"
+
 #--------------
 
 #prerequisites...
@@ -146,10 +160,11 @@ config_elasticsearch() {
         
         # discovery.zen.ping.unicast.hosts: ["10.0.0.228", "10.0.0.235", "10.0.0.238"]
         if [ -n "${discovery_zen_ping_unicast_hosts}" ]; then
-            local tmp="[$(echo ${discovery_zen_ping_unicast_hosts[*]} | sed 's/[^ ][^ ]*/"&"/g' | sed 's/ /, /g')]"
-            #echo $tmp
-            echo "sed -i -r 's@^[ ]*(discovery\.zen\.ping\.unicast\.hosts:)[ ]*(.*)@\1 $(echo ${tmp})@g' elasticsearch.yml"
-            sed -i -r 's@^[ ]*(discovery\.zen\.ping\.unicast\.hosts:)[ ]*(.*)@\1 '$(echo ${tmp})'@g' elasticsearch.yml
+            #local tmp="[$(echo ${discovery_zen_ping_unicast_hosts[*]} | sed 's/[^ ][^ ]*/"&"/g' | sed 's/ /, /g')]"
+            #echo "sed -i -r 's@^[ ]*(discovery\.zen\.ping\.unicast\.hosts:)[ ]*(.*)@\1 ${tmp}@g' ${install_dir}/elasticsearch/config/elasticsearch.yml"
+            #eval echo "sed -i -r 's@^[ ]*(discovery\.zen\.ping\.unicast\.hosts:)[ ]*(.*)@\1 ${tmp}@g' ${install_dir}/elasticsearch/config/elasticsearch.yml"
+      echo "sed -i -r 's@^[ ]*(discovery\.zen\.ping\.unicast\.hosts:)[ ]*(.*)@\1 '$(array_to_str ${discovery_zen_ping_unicast_hosts[*]})'@g' ${install_dir}/elasticsearch/config/elasticsearch.yml"
+            sed -i -r 's@^[ ]*(discovery\.zen\.ping\.unicast\.hosts:)[ ]*(.*)@\1 '$(array_to_str ${discovery_zen_ping_unicast_hosts[*]})'@g' ${install_dir}/elasticsearch/config/elasticsearch.yml
             echo "discovery_zen_ping_unicast_hosts=(${discovery_zen_ping_unicast_hosts[*]})" >> ${envfile}
         fi
         
