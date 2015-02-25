@@ -140,11 +140,49 @@ Searches for all documents in the t1 container.
 Query (using RESTful API)
 -----
 
-The most basic query is just go get everything.
+Here is a query using the RESTful API to get 4 fields from the data
+matching the _id query term:
 ```bash
-$> bin/query -n t1 -q '*:*'
+$> curl -s -X GET http://10.0.0.238:9200/_search -d 
+   '{"fields" :
+   ["__extra.original_path","global.institute_id","global.title","globa.variables"], 
+   "query" : {"term":{"_id": "/home/553/gmb553/geonetwork-docker/publisher/help/gridspec_seaIce_fx_GFDL-ESM2M_1pctCO2_r0i0p0.nc"}}}' | python -m json.tool
+{
+    "_shards": {
+        "failed": 0,
+        "successful": 5,
+        "total": 5
+    },
+    "hits": {
+        "hits": [
+            {
+                "_id": "/home/553/gmb553/geonetwork-docker/publisher/help/gridspec_seaIce_fx_GFDL-ESM2M_1pctCO2_r0i0p0.nc",
+                "_index": "geonetwork",
+                "_score": 1.0,
+                "_type": "file",
+                "fields": {
+                    "__extra.original_path": [
+                        "/home/553/gmb553/geonetwork-docker/publisher/help/gridspec_seaIce_fx_GFDL-ESM2M_1pctCO2_r0i0p0.nc"
+                    ],
+                    "global.institute_id": [
+                        "NOAA GFDL"
+                    ],
+                    "global.title": [
+                        "NOAA GFDL GFDL-ESM2M, 1 percent per year CO2 experiment output for CMIP5 AR5"
+                    ]
+                }
+            }
+        ],
+        "max_score": 1.0,
+        "total": 1
+    },
+    "timed_out": false,
+    "took": 4
+}
 ```
-
+See: 
+[elasticsearch reference](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/index.html)
+[good primer article](http://okfnlabs.org/blog/2013/07/01/elasticsearch-query-tutorial.html)
 
 
 Container
