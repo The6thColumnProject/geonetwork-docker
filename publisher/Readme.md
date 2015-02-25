@@ -140,6 +140,37 @@ Searches for all documents in the t1 container.
 Query (using RESTful API)
 -----
 
+Here is a RESTful query to match againt "experiment_id" returning the data for the "original_path" for all the hits:
+```bash
+$> curl -s -X GET http://10.0.0.238:9200/_search -d '{"fields" : ["__extra.original_path"], "query" : {"match":{"global.experiment_id": "1pctCO2"}}}' | python -m json.tool
+
+{
+    "_shards": {
+        "failed": 0,
+        "successful": 5,
+        "total": 5
+    },
+    "hits": {
+        "hits": [
+            {
+                "_id": "/home/553/gmb553/geonetwork-docker/publisher/help/gridspec_seaIce_fx_GFDL-ESM2M_1pctCO2_r0i0p0.nc",
+                "_index": "geonetwork",
+                "_score": 0.30685282000000003,
+                "_type": "file",
+                "fields": {
+                    "__extra.original_path": [
+                        "/home/553/gmb553/geonetwork-docker/publisher/help/gridspec_seaIce_fx_GFDL-ESM2M_1pctCO2_r0i0p0.nc"
+                    ]
+                }
+            }
+        ],
+        "max_score": 0.30685282000000003,
+        "total": 1
+    },
+    "timed_out": false,
+    "took": 4
+}
+```
 Here is a query using the RESTful API to get 4 fields from the data
 matching the _id query term:
 ```bash
@@ -180,10 +211,13 @@ $> curl -s -X GET http://10.0.0.238:9200/_search -d
     "took": 4
 }
 ```
-See: 
-[elasticsearch reference](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/index.html)
-[good primer article](http://okfnlabs.org/blog/2013/07/01/elasticsearch-query-tutorial.html)
 
+
+See:
+<ul>
+<li>[elasticsearch reference](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/index.html)
+<li>[good primer article](http://okfnlabs.org/blog/2013/07/01/elasticsearch-query-tutorial.html)
+</ul>
 
 Container
 -----
