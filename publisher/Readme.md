@@ -194,7 +194,7 @@ $> curl -s -X GET http://10.0.0.238:9200/_search -d
                 "fields": {
                     "__extra.original_path": [
                         "/home/553/gmb553/geonetwork-docker/publisher/help/gridspec_seaIce_fx_GFDL-ESM2M_1pctCO2_r0i0p0.nc"
-                    ],
+],
                     "global.institute_id": [
                         "NOAA GFDL"
                     ],
@@ -215,8 +215,8 @@ $> curl -s -X GET http://10.0.0.238:9200/_search -d
 
 See:
 <ul>
-<li>[elasticsearch reference](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/index.html)
-<li>[good primer article](http://okfnlabs.org/blog/2013/07/01/elasticsearch-query-tutorial.html)
+<li> <a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/index.html">Elasticsearch reference</a>
+<li> <a href="http://okfnlabs.org/blog/2013/07/01/elasticsearch-query-tutorial.html">Good primer article</a>
 </ul>
 
 Container
