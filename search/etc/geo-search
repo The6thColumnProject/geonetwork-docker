@@ -37,6 +37,7 @@ FORCE_INSTALL=${FORCE_INSTALL:-0}
 #User Defined / Settable (public)
 #--------------
 install_dir=${install_dir:-"/usr/local"}
+elasticsearch_install_dir=${elasticsearch_install_dir:-${ELASTICSEARCH_INSTALL_DIR:-${install_dir}/elasticsearch-${elastic_search_version}}}
 elastic_search_version=${elastic_search_version:-${ELASTIC_SEARCH_VERSION:-"1.4.1"}}
 workdir=${workdir:-${GEO_SEARCH_INSTALL_WORKDIR:-${installer_home}/workbench/geo-search}}
 
@@ -119,6 +120,7 @@ install_elasticsearch() {
             curl -s https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-${elastic_search_version}.tar.gz | (cd ${install_dir}; tar xzvf -)
             ln -s ${install_dir}/elasticsearch-${elastic_search_version} ${install_dir}/elasticsearch
             mkdir -p ${install_dir}/elasticsearch_data/{data,var/run,log}
+            echo "elasticsearch_install_dir=${install_dir}/elasticsearch" >> ${envfile}
         )
     else
         echo "[PRESENT]"
@@ -185,6 +187,26 @@ config_elasticsearch() {
     )
 }
 
+install_plugins() {
+    [ -e "${envfile}" ] && source ${envfile}
+
+    if [ -d "${elasticsearch_install_dir}/plugins/head"] ; then
+        echo "Installing pluggin: elasticsearch-head"
+        ${elasticsearch_install_dir}/bin/plugin -install mobz/elasticsearch-head
+        (($? == 0)) && echo "[OK]" || echo "[FAIL]"
+    else
+        echo "head plugin already present"
+    fi
+
+    if [ -d "${elasticsearch_install_dir}/plugins/inquisitor"]; then
+        echo "Installing pluggin: elasticsearch-inquisitor"
+        ${elasticsearch_install_dir}/bin/plugin -install polyfractal/elasticsearch-inquisitor
+        (($? == 0)) && echo "[OK]" || echo "[FAIL]"
+    else
+        echo "inquisitor plugin already present"
+    fi
+}
+
 #-----------------------------------------------
 # Startup Script Lifecycle functions...
 #-----------------------------------------------
@@ -209,10 +231,12 @@ status() {
 
 install() {
     echo "Installing... geo-search "
-    #check_prerequisites && \
+    check_prerequisites && \
         install_java && \
         install_elasticsearch && \
-        config_elasticsearch
+        config_elasticsearch && \
+        install_plugins
+    echo "installation complete enjoy.. :-)"
 }
 
 #-----

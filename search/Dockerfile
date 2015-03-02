@@ -48,6 +48,11 @@ ENV JAVA_HOME /opt/java/jdk1.7.0_67
 RUN curl https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.4.1.tar.gz | tar xzv
 RUN mv /elasticsearch-1.4.1 /elasticsearch
 
+#install elasticsearch plugins...
+RUN /elasticsearch/bin/plugin -install mobz/elasticsearch-head
+RUN /elasticsearch/bin/plugin -install polyfractal/elasticsearch-inquisitor
+
+
 #experimenting with xinet.d
 RUN apt-get -y install xinetd && \
     echo "container\t10101/tcp" >>/etc/services 

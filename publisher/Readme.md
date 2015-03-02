@@ -211,12 +211,13 @@ $> curl -s -X GET http://10.0.0.238:9200/_search -d
     "took": 4
 }
 ```
-
+The installer and the docker container have in place [elsticserach-head](http://mobz.github.io/elasticsearch-head/) for viewing your cluster and [elasticsearch-inquisitor](https://github.com/polyfractal/elasticsearch-inquisitor) for building queries over your data.
 
 See:
 <ul>
 <li> <a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/index.html">Elasticsearch reference</a>
 <li> <a href="http://okfnlabs.org/blog/2013/07/01/elasticsearch-query-tutorial.html">Good primer article</a>
+<li> <a href="http://www.elasticsearch.org/client/community/current/front-ends.html">Front Ends</a>
 </ul>
 
 Container
