@@ -6,6 +6,22 @@ Basics
 ------
 * Have [docker installed](https://docs.docker.com/reference/#installation)
 
+Installation
+------
+
+```
+%> curl -o ./geo-publisher -s https://raw.githubusercontent.com/the6thcolumnproject/geonetwork-docker/master/publisher/etc/geo-publisher
+%> chmod 755 ./geo-publisher
+%> ./geo-publisher
+```
+
+This will:
+
+* perform a docker <i>pull</i> from the docker repository.
+* download the helper publishing scripts (nc2es nc2geonetwork nc2json query run) [default install location: /usr/local/bin]
+
+Note
+------
 The container is automatically built.  The build resides in the docker registry as [geo-publisher](https://registry.hub.docker.com/u/the6thcolumnproject/geo-publisher/)
 
 * Fetch the container from the registry:
@@ -17,12 +33,14 @@ The container is automatically built.  The build resides in the docker registry 
 * Or, as is the usual case with our distributions, you may build it yourself with our script:
 
 ```
+%> git clone https://github.com/The6thColumnProject/geonetwork-docker.git
+%> cd geonetwork-docker/publisher
 %> ./build
 ```
 
 Then you can test it by generating a json file from an nc one:
 ```
-bin/nc2json some/where/some_file.nc
+%> bin/nc2json some/where/some_file.nc
 ```
 
 nc2json

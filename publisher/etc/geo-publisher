@@ -32,7 +32,7 @@ install() {
     for script in ${scripts[@]} ; do
         echo "installing ${script} "
         mkdir -p ${install_dir}/bin 
-        curl --progress-bar -o ${install_dir}/bin/${script} https://raw.githubusercontent.com/estani/geonetwork-docker/master/publisher/bin/${script}
+        curl --progress-bar -o ${install_dir}/bin/${script} https://raw.githubusercontent.com/the6thcolumnproject/geonetwork-docker/master/publisher/bin/${script}
         chmod 755 ${install_dir}/bin/${script}
     done
     echo "install completed"
