@@ -242,3 +242,50 @@ Container
 -----
 This software is provided as a Docker container located here:
 <https://registry.hub.docker.com/u/the6thcolumnproject/geo-publisher/>
+
+Cluster Sanity Check
+-----
+To check on the local node:
+
+```
+%> curl http://10.0.0.228:9200/
+```
+Resultant Output:
+
+```
+{
+  "status" : 200,
+  "name" : "Wundarr the Aquarian",
+  "version" : {
+    "number" : "1.3.4",
+    "build_hash" : "a70f3ccb52200f8f2c87e9c370c6597448eb3e45",
+    "build_timestamp" : "2014-09-30T09:07:17Z",
+    "build_snapshot" : false,
+    "lucene_version" : "4.9"
+  },
+  "tagline" : "You Know, for Search"
+}
+```
+
+To minimally check on the cluster:
+
+```
+%> curl http://10.0.0.228:9200/_cluster/health?pretty=true
+```
+
+Resultant Output:
+
+```
+{
+  "cluster_name" : "moya-search",
+  "status" : "green",
+  "timed_out" : false,
+  "number_of_nodes" : 3,
+  "number_of_data_nodes" : 3,
+  "active_primary_shards" : 5,
+  "active_shards" : 10,
+  "relocating_shards" : 0,
+  "initializing_shards" : 0,
+  "unassigned_shards" : 0
+}
+```
