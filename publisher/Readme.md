@@ -235,7 +235,7 @@ See:
 <ul>
 <li> <a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/index.html">Elasticsearch reference</a>
 <li> <a href="http://okfnlabs.org/blog/2013/07/01/elasticsearch-query-tutorial.html">Good primer article</a>
-<li> <a href="http://www.elasticsearch.org/client/community/current/front-ends.html">Front Ends</a>
+<li> <a href="http://www.elasticsearch.org/guide/en/elasticsearch/client/community/current/front-ends.html">Front Ends</a>
 </ul>
 
 Container
