@@ -27,7 +27,9 @@
 install_dir=${install_dir:-"/usr/local"}
 
 install() {
-    #docker pull the6thcolumnproject/geo-publisher
+    docker pull the6thcolumnproject/geo-publisher
+    (($? != 0)) && echo "Sorry, Failed to install container..." && exit 1
+
     local scripts=(nc2es nc2geonetwork nc2json query run)
     for script in ${scripts[@]} ; do
         echo "installing ${script} "
