@@ -3,7 +3,7 @@
 #####
 # geo-search: Metadata Search Project - ANU/CodeWRX
 # chkconfig: 345 98 02
-# description: Installer for the Geo Search Nodde application stack
+# description: Installer for the Geo Search Node application stack
 #
 #**************************************************************************
 #   Copyright (c) 2012, The 6Th Column Project, LLC.                      *
