@@ -2,10 +2,11 @@
 #Description: basic run script for starting the container
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source $SCRIPT_DIR/../helper.sh
+[ -e "${SCRIPT_DIR}/helper.sh" ] && source $SCRIPT_DIR/helper.sh || source $SCRIPT_DIR/../helper.sh
 local_env
 
-image="$(basename $SCRIPT_DIR)"
+#image="$(basename $SCRIPT_DIR)"
+image="the6thcolumnproject/geo-publisher"
 
 fullpath2() {
     local path="$1"

@@ -3,5 +3,6 @@
 path="$1"
 file="$(basename "$path")"
 basedir="$( cd "$(dirname "$path")"; pwd)"
+image="the6thcolumnproject/geo-publisher"
 
-docker run --rm -v "$basedir:/data" publisher /scripts/to_geonetwork.py "/data/$file"
+docker run --rm -v "$basedir:/data" ${image} /scripts/to_geonetwork.py "/data/$file"

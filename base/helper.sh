@@ -1,6 +1,6 @@
 #!/bin/bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-image="$(basename $SCRIPT_DIR)"
+image="the6thcolumnproject/$(basename $SCRIPT_DIR)"
 
 usage() {
     cat<<EOF
