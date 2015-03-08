@@ -5,7 +5,7 @@ import json
 
 import utils
 from publisher import SimplePathParser, NetCDFFileHandler
-from es_api import ESFactory
+from es_api import ESFactory, ES
 
 class SetEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -13,6 +13,10 @@ class SetEncoder(json.JSONEncoder):
             return json.JSONEncoder.default(self, obj)
         except:
             return str(obj)
+
+def to_local_path(realpath):
+    return realpath.replace(os.getenv(NetCDFFileHandler.HOST_DATA_DIR_VAR),NetCDFFileHandler.CONTAINER_DATA_DIR)
+            
 
 def process(meta, elasticsearch, global_att, show=True, rename_dict={}):
     """meta :=  the complete metadata dictionary that will be stored
@@ -29,6 +33,10 @@ def process(meta, elasticsearch, global_att, show=True, rename_dict={}):
     if show:
         print meta_json
     if elasticsearch:
+        original_path = to_local_path(meta.get(ES.EXTRA, {}).get('original_path', None))
+        if original_path is not None:
+            with open(original_path + '.json', 'w') as f:
+                f.write(meta_json)
         elasticsearch.publish(json.loads(meta_json))
 
 def main(orig_args=sys.argv[1:]):
