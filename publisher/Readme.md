@@ -339,7 +339,7 @@ Resultant Output:
 Basic Use Case
 -----
 
-* Publish all .nc's linked in /g/data/ua6/drstree/CMIP5/GCM/CSRIO-BOM/ACCESS1-3
+* Publish all .nc's linked in /g/data/ua6/drstree/CMIP5/GCM/CSIRO-BOM/ACCESS1-3
 
 ```
 %> 
@@ -349,3 +349,8 @@ Basic Use Case
 ```
 %> 
 ```
+
+### Notes n' Links
+
+<a href="http://cmip-pcmdi.llnl.gov/cmip5/docs/cmip5_data_reference_syntax.pdf">DRS syntax document</a>
+
