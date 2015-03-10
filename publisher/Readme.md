@@ -159,6 +159,7 @@ Query (using RESTful API)
 -----
 
 Here is a RESTful query to match againt "experiment_id" returning the data for the "original_path" for all the hits:
+
 ```bash
 $> curl -s -X GET http://10.0.0.238:9200/_search -d '{"fields" : ["__extra.original_path"], "query" : {"match":{"global.experiment_id": "1pctCO2"}}}' | python -m json.tool
 
@@ -189,8 +190,10 @@ $> curl -s -X GET http://10.0.0.238:9200/_search -d '{"fields" : ["__extra.origi
     "took": 4
 }
 ```
+
 Here is a query using the RESTful API to get 4 fields from the data
 matching the _id query term:
+
 ```bash
 $> curl -s -X GET http://10.0.0.238:9200/_search -d 
    '{"fields" :
@@ -229,12 +232,54 @@ $> curl -s -X GET http://10.0.0.238:9200/_search -d
     "took": 4
 }
 ```
+
+Here is a query, using a wildcard and getting prescirbed fields.  It shows the nomenclature for traversing the tree structure of keys to expose particular fields.
+
+
+```
+curl -s -X GET http://10.0.0.238:9200/_search -d '{"fields":["__extra.original_path","global.frequency","variables.height.axis"], "query":{"wildcard":{"global.frequency":"mo*"}}}' | python -m json.tool
+{
+    "_shards": {
+        "failed": 0,
+        "successful": 5,
+        "total": 5
+    },
+    "hits": {
+        "hits": [
+            {
+                "_id": "/home/553/gmb553/uas_Amon_bcc-csm1-1_historical_r1i1p1_185001-201212.nc",
+                "_index": "geonetwork",
+                "_score": 1.0,
+                "_type": "file",
+                "fields": {
+                    "__extra.original_path": [
+                        "/home/553/gmb553/uas_Amon_bcc-csm1-1_historical_r1i1p1_185001-201212.nc"
+                    ],
+                    "global.frequency": [
+                        "mon"
+                    ],
+                    "variables.height.axis": [
+                        "Z"
+                    ]
+                }
+            }
+        ],
+        "max_score": 1.0,
+        "total": 1
+    },
+    "timed_out": false,
+    "took": 5
+}
+```
+
 The installer and the docker container have in place [elsticserach-head](http://mobz.github.io/elasticsearch-head/) for viewing your cluster and [elasticsearch-inquisitor](https://github.com/polyfractal/elasticsearch-inquisitor) for building queries over your data.
 
 See:
 <ul>
 <li> <a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/index.html">Elasticsearch reference</a>
 <li> <a href="http://okfnlabs.org/blog/2013/07/01/elasticsearch-query-tutorial.html">Good primer article</a>
+<li> <a href="http://joelabrahamsson.com/elasticsearch-101/">Elasticsearch 101</a>
+<li> <a href="https://chrome.google.com/webstore/detail/sense-beta/lhjgkmllcaadmopgmanpapmpjgmfcfig/related?hl=en">Sense</a> - A Very nice Chrome pluggin for dealing with JSON querying
 <li> <a href="http://www.elasticsearch.org/guide/en/elasticsearch/client/community/current/front-ends.html">Front Ends</a>
 </ul>
 
@@ -288,4 +333,19 @@ Resultant Output:
   "initializing_shards" : 0,
   "unassigned_shards" : 0
 }
+```
+<hr>
+
+Basic Use Case
+-----
+
+* Publish all .nc's linked in /g/data/ua6/drstree/CMIP5/GCM/CSRIO-BOM/ACCESS1-3
+
+```
+%> 
+```
+* Find all data with frequency=mon, variable=tos
+
+```
+%> 
 ```
