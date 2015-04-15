@@ -14,8 +14,10 @@ while [[ "$1" ]]; do
     array+=( "$1" )
     shift
 done
-last_arg=${array[${#array[@]}-1]}
-unset array[${#array[@]}-1]
+if (( ${#array[@]}>0 )); then
+    last_arg=${array[${#array[@]}-1]}
+    unset array[${#array[@]}-1]
+fi
 
 #reset positional parameters to what's left
 set -- "${array[@]}"

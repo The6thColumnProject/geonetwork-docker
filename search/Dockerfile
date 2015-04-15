@@ -49,8 +49,8 @@ RUN curl https://download.elasticsearch.org/elasticsearch/elasticsearch/elastics
 RUN mv /elasticsearch-1.4.1 /elasticsearch
 
 #install elasticsearch plugins...
-RUN /elasticsearch/bin/plugin -install mobz/elasticsearch-head
-RUN /elasticsearch/bin/plugin -install polyfractal/elasticsearch-inquisitor
+#RUN /elasticsearch/bin/plugin -install mobz/elasticsearch-head
+#RUN /elasticsearch/bin/plugin -install polyfractal/elasticsearch-inquisitor
 
 
 #experimenting with xinet.d
@@ -71,4 +71,4 @@ ADD container/boot /container/boot
 EXPOSE 9200 9300 10101
 
 #setting up the node
-#ENV CONF_DIR /config # not working wihtout the initd script, cannot find it..
+ENV CONF_DIR /config # not working wihtout the initd script, cannot find it..

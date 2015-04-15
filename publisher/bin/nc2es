@@ -35,8 +35,8 @@ options="$options $DOCKER_EXTENDED_ENV"
 
 if [[ "$data" ]]; then
     data_root=/"$(cut -d '/' -f2<<<"$data")"
-    options="$options -v $data:/data -v $data_root:/data_root -e DATA_PATH=$data"
-    [[ -z "$target" ]] && target=/data
+    options="$options -v $data_root:/data_root -e DATA_PATH=$data"
+    [[ -z "$target" ]] && target=/data_root
 fi
 
 if [[ "$container" ]]; then

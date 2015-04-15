@@ -8,10 +8,6 @@ from publisher import SimplePathParser, NetCDFFileHandler, SetEncoder
 from es_api import ESFactory, ES
 
 
-def to_local_path(realpath):
-    return realpath.replace(os.getenv(NetCDFFileHandler.HOST_DATA_DIR_VAR),NetCDFFileHandler.CONTAINER_DATA_DIR)
-            
-
 def process(meta, elasticsearch, global_att, show=True, rename_dict={}):
     """meta :=  the complete metadata dictionary that will be stored
     elasticsearch := some es connection or None
@@ -27,7 +23,6 @@ def process(meta, elasticsearch, global_att, show=True, rename_dict={}):
         meta_json = json.dumps(meta, indent=2, cls=SetEncoder)
         print meta_json
     if elasticsearch:
-        original_path = to_local_path(meta.get(ES.EXTRA, {}).get('original_path', None))
         elasticsearch.publish(meta)
 
 def main(orig_args=sys.argv[1:]):
