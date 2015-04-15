@@ -26,8 +26,9 @@ fi
 options="$options $DOCKER_EXTENDED_ENV"
 
 if [[ "$data" ]]; then
-   options="$options -v $data:/data:ro -e DATA_PATH=$data"
-   [[ -z "$target" ]] && target=/data
+    data_root=/"$(cut -d '/' -f2<<<"$data")"
+    options="$options -v $data_root:/data_root -e DATA_PATH=$data"
+    [[ -z "$target" ]] && target=/data_root
 fi
 
 docker run --rm  $options $image /scripts/to_json.py --show --dry-run "$@" "$target"
