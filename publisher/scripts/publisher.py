@@ -136,7 +136,7 @@ class NetCDFFileHandler(object):
         "returns the path behind which a file can be read, i.e. resolved from all links"
         if os.path.islink(filename):
             #read the link (the real path) and convert it to local so we can read it from within the container.
-            realpath = os.readlink(filename)
+            realpath = os.path.join(os.path.dirname(filename), os.readlink(filename))
             return realpath.replace(self._realpath, self._localpath, 1)
         return filename
 
