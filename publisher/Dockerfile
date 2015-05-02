@@ -61,8 +61,8 @@ RUN curl ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4/zlib-1.2.8.tar.gz | tar 
 RUN export CPPFLAGS=-I/hdf5-1.8.13/hdf5/include \
     LDFLAGS=-L/hdf5-1.8.13/hdf5/lib \
     LD_LIBRARY_PATH=/hdf5-1.8.13/hdf5/lib && \
-    curl ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.1.tar.gz | tar xz && \
-    cd netcdf-4.3.3.1 && \
+    curl ftp://ftp.unidata.ucar.edu/pub/netcdf/old/netcdf-4.3.2.tar.gz | tar xz && \
+    cd netcdf-4.3.2 && \
     ./configure && \
     make && \
     make install
