@@ -143,7 +143,7 @@ class NetCDFFileHandler(object):
                     try:
                         yield self.get_metadata(current)
                     except Exception as e:
-                        self.logger.error("Could not process %s (%s)", f, e)
+                        self.logger.error("Could not process %s (%s)", current, e)
     
     def _to_localpath(self, realpath):
         'Transform to a local path (within container) if applicable'
