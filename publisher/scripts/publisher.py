@@ -68,6 +68,7 @@ class NetCDFFileHandler(object):
     We will be assuming the file is within bounds, which means both the target and the source are accessible from the same
     root directory."""
     CONTAINER_DATA_ROOT = '/data_root'
+    HOST_DATA_ROOT_VAR = 'DATA_ROOT'
     HOST_DATA_DIR_VAR = 'DATA_PATH'
     EXTRA = '__extra'
     REMOTE_ENV = dict(DOCKER_LOCALIP='host_ip',
@@ -85,7 +86,7 @@ class NetCDFFileHandler(object):
             #use only the first directory
             self._realpath = '/' + self._realpath.split('/')[1]
             #self._localpath = os.path.join(NetCDFFileHandler.CONTAINER_DATA_ROOT, *self._realpath.split('/')[2:])
-            self._localpath = NetCDFFileHandler.CONTAINER_DATA_ROOT
+            self._localpath = os.getenv(NetCDFFileHandler.HOST_DATA_ROOT_VAR, NetCDFFileHandler.CONTAINER_DATA_ROOT)
         else:
             #this means we will have no container <-> host mapping
             self._localpath = None
