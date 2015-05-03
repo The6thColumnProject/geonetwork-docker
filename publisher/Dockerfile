@@ -88,6 +88,7 @@ ADD env /env
 #prepare the scripts
 ADD scripts /scripts
 
+RUN mkdir /.python-eggs && chmod 777 /.python-eggs
 #ENV CONTAINER_DATA /container_data
 
 #9200  elastic search
