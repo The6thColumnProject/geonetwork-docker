@@ -67,7 +67,7 @@ class NetCDFFileHandler(object):
     This is sadly not enough for symlinks as they might point somewhere else.
     We will be assuming the file is within bounds, which means both the target and the source are accessible from the same
     root directory."""
-    CONTAINER_DATA_ROOT = '/data_root/'
+    CONTAINER_DATA_ROOT = '/data_root'
     HOST_DATA_DIR_VAR = 'DATA_PATH'
     EXTRA = '__extra'
     REMOTE_ENV = dict(DOCKER_LOCALIP='host_ip',
@@ -82,7 +82,10 @@ class NetCDFFileHandler(object):
                 self.default[NetCDFFileHandler.EXTRA][prop_name] = os.environ[env_name]
         self._realpath = os.getenv(NetCDFFileHandler.HOST_DATA_DIR_VAR)
         if self._realpath is not None and self._realpath.strip():
-            self._localpath = os.path.join(NetCDFFileHandler.CONTAINER_DATA_ROOT, *self._realpath.split('/')[2:])
+            #use only the first directory
+            self._realpath = '/' + self._realpath.split('/')[1]
+            #self._localpath = os.path.join(NetCDFFileHandler.CONTAINER_DATA_ROOT, *self._realpath.split('/')[2:])
+            self._localpath = NetCDFFileHandler.CONTAINER_DATA_ROOT
         else:
             #this means we will have no container <-> host mapping
             self._localpath = None
