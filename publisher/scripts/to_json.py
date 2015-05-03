@@ -2,6 +2,7 @@
 
 import sys, os
 import json
+import logging
 
 import utils
 from publisher import SimplePathParser, NetCDFFileHandler, SetEncoder
@@ -47,6 +48,7 @@ def main(orig_args=sys.argv[1:]):
     import argparse
     parser = argparse.ArgumentParser(description='Extracts metadata from Netcdf files')
     parser.add_argument('files', metavar="FILE/DIR", nargs=1)
+    parser.add_argument('-d', '--debug', action='store_true', help='show debug info')
     parser.add_argument('--show', action='store_true', help='show produced json')
     parser.add_argument('--dry-run', action='store_true', help="Don't publish anything")
     parser.add_argument('--json_dump', action='store_true', help='If the json data should be dump along with the analyzed file')
@@ -62,7 +64,15 @@ def main(orig_args=sys.argv[1:]):
     parser.add_argument('--include-crawl', help='Include only the given regular expression while  crawling')
 
     pargs = parser.parse_args(args)
-     
+    
+
+    if pargs.debug:
+        logging.basicConfig(level=logging.DEBUG)
+    
+    #make sure we have some default logger or configure one.
+    if not logging.getLogger().handlers:
+        logging.basicConfig()
+
     #handle input properly
     if pargs.dir_structure is not None or pargs.file_structure is not None:
         path_parser = SimplePathParser(dir_structure=pargs.dir_structure,

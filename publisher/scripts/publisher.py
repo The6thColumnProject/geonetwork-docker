@@ -81,7 +81,16 @@ class NetCDFFileHandler(object):
             if env_name in os.environ:
                 self.default[NetCDFFileHandler.EXTRA][prop_name] = os.environ[env_name]
         self._realpath = os.getenv(NetCDFFileHandler.HOST_DATA_DIR_VAR)
-        self._localpath = os.path.join(NetCDFFileHandler.CONTAINER_DATA_ROOT, *self._realpath.split('/')[2:])
+        if self._realpath is not None and self._realpath.strip():
+            self._localpath = os.path.join(NetCDFFileHandler.CONTAINER_DATA_ROOT, *self._realpath.split('/')[2:])
+        else:
+            #this means we will have no container <-> host mapping
+            self._localpath = None
+            self._realpath = None
+
+        self.logger = logging.getLogger('NetCDFFileHandler')
+
+        self.logger.debug("Init with realpath:%s, localpath:%s", self._realpath, self._localpath)
 
     def __get_id(self, meta):
         "The id is build from the hostname (if present) + ':' + the file path"
@@ -131,26 +140,62 @@ class NetCDFFileHandler(object):
                     try:
                         yield self.get_metadata(current, store=store)
                     except Exception as e:
-                        logging.log(logging.ERROR, "Could not process %s (%s)" % (f, e)) 
+                        self.logger.error("Could not process %s (%s)", f, e)
+    
+    def _to_localpath(self, realpath):
+        'Transform to a local path (within container) if applicable'
+        if self._realpath is not None and realpath.startswith(self._realpath):
+            return self._localpath + realpath[len(self._realpath):]
+        #don't convert anything else
+        return realpath
+
+    def _to_realpath(self, localpath):
+        'Transform to a real path (outside of container) if applicable'
+        if self._localpath is not None and localpath.startswith(self._localpath):
+            return self._realpath + localpath[len(self._localpath):]
+        #don't convert anything else
+        return localpath
+
     def _get_final_path(self, filename):
-        "returns the path behind which a file can be read, i.e. resolved from all links"
-        if os.path.islink(filename):
-            #read the link (the real path) and convert it to local so we can read it from within the container.
-            realpath = os.path.join(os.path.dirname(filename), os.readlink(filename))
-            return realpath.replace(self._realpath, self._localpath, 1)
+        """returns the path behind which a file can be read, i.e. resolved from all links"""
+        last=None
+        max_recursion=10
+        orig_filename=filename
+        while filename != last:
+            max_recursion -= 1
+            if max_recursion == 0:
+                raise Exception("Could not resolve link %s" % orig_filename)
+            self.logger.debug("resolving %s", filename)
+            last = filename
+            if os.path.islink(filename):
+                #read the link (the real path) and convert it to local so we can read it from within the container.
+                #might be relative or a full path, readlink return the last non link full path but since we have a different
+                #directory structure inside the container, some steps might be broke, so we have to iterate mapping them
+                #back to the container internal structure.
+                filename = os.path.join(os.path.dirname(filename), os.readlink(filename))
+            
+            filename = self._to_localpath(filename)
         return filename
+
+    def _get_json_dump_location(self, localpath):
+        'Returns the location where the json dump file should be created.'
+        return localpath + '.json'
 
     def get_metadata(self, filename, store=False):
         "Extracts the metadata from the given local file (might be symlink, or non canonical)"
         #absolute local path (local is within container)
         localpath = os.path.abspath(filename)
+        #locapath to real path (skipping links)
+        finalpath = self._get_final_path(localpath)
         #the complete realpath on the host (non resolved in case of symlink)
-        realpath = localpath.replace(self._localpath, self._realpath, 1)
+        realpath = self._to_realpath(localpath)
 
+        self.logger.debug("localpath: %s, finalpath: %s, realpath: %s", localpath, finalpath, realpath)
+        
         meta = utils.dict_merge({}, self.default, self.__extract_from_filename(realpath))
         #we should read the real file, which might be something completely different as a target of a symlink
         #basically we get the metadata from the link and the data from the target
-        with Dataset(self._get_final_path(localpath), 'r') as f:
+        with Dataset(finalpath, 'r') as f:
             meta['global'] = {}
             for g_att in f.ncattrs():
                 meta['global'][str(g_att)] = getattr(f, g_att)
@@ -166,7 +211,7 @@ class NetCDFFileHandler(object):
         if store:
             meta_json = json.dumps(meta, indent=2, cls=SetEncoder)
             try:
-                with open(localpath + '.json', 'w') as f:
+                with open(self._get_json_dump_location(localpath) + '.json', 'w') as f:
                     f.write(meta_json)
             except Exception as e:
                 #we try to write in localpath and report the error in realpath... that is sadly intentional
