@@ -31,4 +31,4 @@ if [[ "$data" ]]; then
     [[ -z "$target" ]] && target=/data_root/${data#?*/}
 fi
 
-docker run --rm  $options $image /scripts/to_json.py --show --dry-run "$@" "$target"
+docker run --rm -e HOST_USER=$(id -u) -e HOST_USER_GROUP=$(id -g) $options $image /scripts/bootstrap.sh /scripts/to_json.py --show --dry-run "$@" "$target"
