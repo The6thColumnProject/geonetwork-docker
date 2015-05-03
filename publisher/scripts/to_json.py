@@ -20,8 +20,8 @@ def process(meta, elasticsearch, global_att, show=True, rename_dict={}):
     #rename properties as required:
     utils.rename_keys(meta, rename_dict)
 
+    meta_json = json.dumps(meta, indent=2, cls=SetEncoder)
     if show:
-        meta_json = json.dumps(meta, indent=2, cls=SetEncoder)
         print meta_json
     if elasticsearch:
         #trying some workaround because of serialization
