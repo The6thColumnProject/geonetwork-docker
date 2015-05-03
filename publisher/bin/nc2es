@@ -33,13 +33,12 @@ fi
 
 options="$options $DOCKER_EXTENDED_ENV"
 
-if [[ "$data" ]]; then
-    data_root=/"$(cut -d '/' -f2<<<"$data")"
-    options="$options -v $data_root:/data_root -e DATA_PATH=$data"
-    [[ -z "$target" ]] && target=/data_root
-fi
-
 if [[ "$container" ]]; then
     options="$options --link $container:es"
 fi
-docker run --rm  $options $image /scripts/to_json.py "$@" "$target"
+if [[ "$data" ]]; then
+    data_root=/"$(cut -d '/' -f2<<<"$data")"
+    options="$options -v $data_root:$data_root -e DATA_PATH2=$data -e DATA_ROOT=$data_root"
+    [[ -z "$target" ]] && target="$data" #/data_root/${data#?*/}
+fi
+docker run --rm -e HOST_USER=$(id -u) -e HOST_USER_GROUP=$(id -g) $options $image /scripts/bootstrap.sh /scripts/to_json.py "$@" "$target"
