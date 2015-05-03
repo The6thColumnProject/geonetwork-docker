@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from netCDF4 import Dataset
-import os, sys
+import os, sys, errno
 import logging
 import utils
 import datetime
@@ -73,7 +73,7 @@ class NetCDFFileHandler(object):
     REMOTE_ENV = dict(DOCKER_LOCALIP='host_ip',
                     DOCKER_LOCALHOSTNAME='hostname')
 
-    def __init__(self, path_parser = None):
+    def __init__(self, path_parser = None, json_dump_dir = None):
         self.path_parser = path_parser
         self.default = {}
         self.default[NetCDFFileHandler.EXTRA] = {'created' : datetime.datetime.utcnow().isoformat()}
@@ -87,7 +87,7 @@ class NetCDFFileHandler(object):
             #this means we will have no container <-> host mapping
             self._localpath = None
             self._realpath = None
-
+        self.json_dump_dir = json_dump_dir
         self.logger = logging.getLogger('NetCDFFileHandler')
 
         self.logger.debug("Init with realpath:%s, localpath:%s", self._realpath, self._localpath)
@@ -122,7 +122,7 @@ class NetCDFFileHandler(object):
         meta['unlimited'] = dim.isunlimited()
         return meta
 
-    def crawl_dir(self, path, exclude=[], include=None, store=False):
+    def crawl_dir(self, path, exclude=[], include=None):
         for root, subdirs, files in os.walk(path):
             for f in files:
                 skip = False
@@ -138,7 +138,7 @@ class NetCDFFileHandler(object):
                             break
                 if not skip:
                     try:
-                        yield self.get_metadata(current, store=store)
+                        yield self.get_metadata(current)
                     except Exception as e:
                         self.logger.error("Could not process %s (%s)", f, e)
     
@@ -179,9 +179,18 @@ class NetCDFFileHandler(object):
 
     def _get_json_dump_location(self, localpath):
         'Returns the location where the json dump file should be created.'
-        return localpath + '.json'
+        filename = self.json_dump_dir + localpath + '.json'
+        dirs = os.path.dirname(filename)
+        try:
+            os.makedirs(dirs)
+        except OSError as exc: # Python >2.5
+            if exc.errno == errno.EEXIST and os.path.isdir(dirs):
+                pass
+            else: 
+                raise
+        return filename
 
-    def get_metadata(self, filename, store=False):
+    def get_metadata(self, filename):
         "Extracts the metadata from the given local file (might be symlink, or non canonical)"
         #absolute local path (local is within container)
         localpath = os.path.abspath(filename)
@@ -208,10 +217,10 @@ class NetCDFFileHandler(object):
 
         #the id will be removed when publishing and used as such
         meta[NetCDFFileHandler.EXTRA]['_id'] = self.__get_id(meta)
-        if store:
+        if self.json_dump_dir is not None:
             meta_json = json.dumps(meta, indent=2, cls=SetEncoder)
             try:
-                with open(self._get_json_dump_location(localpath) + '.json', 'w') as f:
+                with open(self._get_json_dump_location(realpath), 'w') as f:
                     f.write(meta_json)
             except Exception as e:
                 #we try to write in localpath and report the error in realpath... that is sadly intentional

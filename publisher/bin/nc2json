@@ -4,7 +4,21 @@ source $SCRIPT_DIR/../helper.sh
 local_env
 
 #remove last param
-array=( "$@" )
+array=( )
+while [[ "$#" != 0 ]]; do
+    case "$1" in
+        --json_dump_dir) 
+            #mount and replace for container
+            json_dump_dir="$2"
+            array+=( "$1" )
+            array+=( "/json_dump" )
+            shift 2
+            continue
+            ;;
+    esac
+    array+=( "$1" )
+    shift 
+done
 last_arg=${array[${#array[@]}-1]}
 unset array[${#array[@]}-1]
 
@@ -30,5 +44,7 @@ if [[ "$data" ]]; then
     options="$options -v $data_root:/data_root -e DATA_PATH=$data"
     [[ -z "$target" ]] && target=/data_root/${data#?*/}
 fi
-
+if [[ "$json_dump_dir" ]]; then
+    options="$options -v "$(fullpath "$json_dump_dir")":/json_dump"
+fi
 docker run --rm -e HOST_USER=$(id -u) -e HOST_USER_GROUP=$(id -g) $options $image /scripts/bootstrap.sh /scripts/to_json.py --show --dry-run "$@" "$target"

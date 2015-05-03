@@ -51,7 +51,7 @@ def main(orig_args=sys.argv[1:]):
     parser.add_argument('-d', '--debug', action='store_true', help='show debug info')
     parser.add_argument('--show', action='store_true', help='show produced json')
     parser.add_argument('--dry-run', action='store_true', help="Don't publish anything")
-    parser.add_argument('--json_dump', action='store_true', help='If the json data should be dump along with the analyzed file')
+    parser.add_argument('--json_dump_dir', help='Dump the generated json files to this dir (generate same directory structure as real path)')
     parser.add_argument('-n', metavar='CONTAINER', help='Contair name with an elasticsearch instance running in it where we will be publishing')
     parser.add_argument('-p', '--port', type=int, help='Elastic search port (default 9200)', default=9200)
     #This is not used here, but used by the calling script. Still we want to show a single help.
@@ -80,7 +80,7 @@ def main(orig_args=sys.argv[1:]):
                                         file_sep=pargs.file_structure_sep)
     else:
         path_parser = None
-    handler = NetCDFFileHandler(path_parser=path_parser)
+    handler = NetCDFFileHandler(path_parser=path_parser, json_dump_dir=pargs.json_dump_dir)
 
     exclude = []
     include = None
@@ -100,7 +100,7 @@ def main(orig_args=sys.argv[1:]):
 
     for filename in pargs.files:
         if os.path.isdir(filename):
-            for file_meta in handler.crawl_dir(filename, exclude=exclude, include=include, store=pargs.json_dump):
+            for file_meta in handler.crawl_dir(filename, exclude=exclude, include=include):
                 process(file_meta, es, global_att, show=pargs.show)
         elif os.path.isfile(filename):
             file_meta = handler.get_metadata(filename, store=pargs.json_dump)
