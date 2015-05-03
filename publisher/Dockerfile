@@ -85,9 +85,6 @@ RUN pip install elasticsearch
 #prepare env
 ADD env /env
 
-#this is a workaround for python can be improved if the rest works as planned
-RUN mkdir /.python-eggs && chmod 777 /.python-eggs
-
 #prepare the scripts
 ADD scripts /scripts
 
