@@ -49,8 +49,8 @@ RUN curl https://download.elasticsearch.org/elasticsearch/elasticsearch/elastics
 RUN mv /elasticsearch-1.4.1 /elasticsearch
 
 #install elasticsearch plugins...
-#RUN /elasticsearch/bin/plugin -install mobz/elasticsearch-head
-#RUN /elasticsearch/bin/plugin -install polyfractal/elasticsearch-inquisitor
+RUN /elasticsearch/bin/plugin -install mobz/elasticsearch-head
+RUN /elasticsearch/bin/plugin -install polyfractal/elasticsearch-inquisitor
 
 
 #experimenting with xinet.d
