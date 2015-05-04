@@ -6,6 +6,14 @@ local_env
 array=( )
 while [[ "$1" ]]; do
     case "$1" in
+        --json_dump_dir) 
+            #mount and replace for container
+            json_dump_dir="$2"
+            array+=( "$1" )
+            array+=( "/json_dump" )
+            shift 2
+            continue
+            ;;
         -n) container="$2"  #container holding an elastic search for deployment
             shift 2
             continue
@@ -40,5 +48,8 @@ if [[ "$data" ]]; then
     data_root=/"$(cut -d '/' -f2<<<"$data")"
     options="$options -v $data_root:$data_root -e DATA_PATH2=$data -e DATA_ROOT=$data_root"
     [[ -z "$target" ]] && target="$data" #/data_root/${data#?*/}
+fi
+if [[ "$json_dump_dir" ]]; then
+    options="$options -v "$(fullpath "$json_dump_dir")":/json_dump"
 fi
 docker run --rm -e HOST_USER=$(id -u) -e HOST_USER_GROUP=$(id -g) $options $image /scripts/bootstrap.sh /scripts/to_json.py "$@" "$target"

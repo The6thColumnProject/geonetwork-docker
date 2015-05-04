@@ -94,7 +94,7 @@ class NetCDFFileHandler(object):
         self.json_dump_dir = json_dump_dir
         self.logger = logging.getLogger('NetCDFFileHandler')
 
-        self.logger.debug("Init with realpath:%s, localpath:%s", self._realpath, self._localpath)
+        self.logger.debug("Init with realpath:%s, localpath:%s, jsondump:%s", self._realpath, self._localpath, self.json_dump_dir)
 
     def __get_id(self, meta):
         "The id is build from the hostname (if present) + ':' + the file path"
@@ -223,14 +223,15 @@ class NetCDFFileHandler(object):
         meta[NetCDFFileHandler.EXTRA]['_id'] = self.__get_id(meta)
         if self.json_dump_dir is not None:
             meta_json = json.dumps(meta, indent=2, cls=SetEncoder)
+            json_file = self._get_json_dump_location(realpath)
             try:
-                with open(self._get_json_dump_location(realpath), 'w') as f:
+                self.logger.debug("Dumping json file to: %s", json_file)
+                with open( json_file, 'w') as f:
                     f.write(meta_json)
             except Exception as e:
                 #we try to write in localpath and report the error in realpath... that is sadly intentional
                 #as the localpath is the internal representation of the realpath, which is the only thing the user
                 #will ever see.
-                sys.stderr.write('Could not write file %s: %s\n' % (realpath, e))
-                sys.stderr.flush()
+                self.logger.error('Could not write file %s: %s', json_file, e)
         return meta
     

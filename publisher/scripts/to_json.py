@@ -110,7 +110,7 @@ def main(orig_args=sys.argv[1:]):
             for file_meta in handler.crawl_dir(filename, exclude=exclude, include=include):
                 process(file_meta, es, global_att, show=pargs.show)
         elif os.path.isfile(filename):
-            file_meta = handler.get_metadata(filename, store=pargs.json_dump)
+            file_meta = handler.get_metadata(filename)
             process(file_meta, es, global_att, show=pargs.show)
         else:
             print "%s is not a file/dir. skipping" % filename

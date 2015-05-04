@@ -10,5 +10,6 @@ if [[ "$uid" && "$gid" ]]; then
     export PYTHON_EGG_CACHE=/python-eggs
     sudo -Eu host_user "$@"
 else
+    echo "Runing as root...">&2
     "$@"
 fi
