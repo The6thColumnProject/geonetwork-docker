@@ -50,6 +50,7 @@ def main(orig_args=sys.argv[1:]):
     parser = argparse.ArgumentParser(description='Extracts metadata from Netcdf files')
     parser.add_argument('files', metavar="FILE/DIR", nargs=1)
     parser.add_argument('-d', '--debug', action='store_true', help='show debug info')
+    parser.add_argument('--log-level', help='set some specific log level')
     parser.add_argument('--show', action='store_true', help='show produced json')
     parser.add_argument('--dry-run', action='store_true', help="Don't publish anything")
     parser.add_argument('--json_dump_dir', help='Dump the generated json files to this dir (generate same directory structure as real path)')
@@ -69,6 +70,11 @@ def main(orig_args=sys.argv[1:]):
 
     if pargs.debug:
         logging.basicConfig(level=logging.DEBUG)
+    elif pargs.log_level:
+        numeric_level = getattr(logging, pargs.log_level.upper(), None)
+        if not isinstance(numeric_level, int):
+                raise ValueError('Invalid log level: %s' % loglevel)
+        logging.basicConfig(level=numeric_level)
     
     #make sure we have some default logger or configure one.
     if not logging.getLogger().handlers:
