@@ -33,7 +33,7 @@ while getopts "c:n:l:h" opt; do
         c) container_dir="$OPTARG";;    #defines the directory for the container files
         n) container_name="$OPTARG";;   #defines the container name
         h) usage && exit 0;; #this help info
-        l) list_containers_for $OPTARG;; #list names running containers
+        l) list_containers_for $OPTARG; exit 0;; #list names running containers
     esac
 done
 #OPTIONS END

@@ -12,13 +12,14 @@ EOF
 }
 
 #OPTIONS START
-while getopts 'hdic:wn:' opt; do
+while getopts 'hdic:wn:p:' opt; do
     case "$opt" in
         c) container_dir="$OPTARG";;    #defines the directory for the container files
         n) name="$OPTARG";;             #name the container
         d) debug=1;;            #turns debugging on
         i) interactive=1;;      #starts a shell in the container
-        w) web=1;;              #opens web port (80)
+        w) web=1;;              #opens web port (80:8080)
+        p) port="$OPTARG";;     #opens the given port (port:port)
         h) usage; exit 0;;      #shows this help
         *) echo "Unknown option $opt"; usage; exit 1;;
     esac
@@ -31,6 +32,7 @@ done
 #adds extra info
 [[ "$name" ]] && docker_opt="$docker_opt --name $name"
 ((web)) && docker_opt="$docker_opt -p 80:8080"
+[[ "$port" ]] && docker_opt="$docker_opt -p $port:$port"
 
 #setups local dir for container
 if [[ -z "$container_dir" ]]; then 

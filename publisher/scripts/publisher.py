@@ -1,10 +1,20 @@
 #!/usr/bin/env python
 
 from netCDF4 import Dataset
-import os
+import os, sys, errno
 import logging
 import utils
 import datetime
+import json
+
+
+class SetEncoder(json.JSONEncoder):
+    "This is just used for setting up the json parser to do it's best"
+    def default(self, obj):
+        try:
+            return json.JSONEncoder.default(self, obj)
+        except:
+            return str(obj)
 
 class SimplePathParser(object):
     """Simple directory parser strategy that is initialized with a string of the form:
@@ -36,6 +46,7 @@ class SimplePathParser(object):
         self.file_metadict = SimplePathParser.parse_structure(file_structure, file_sep)
 
     def extract(self, path):
+        "Extracts metadata from the path and file name"
         meta = {}
         parts = os.path.dirname(path).split(os.sep)
         for pos, name in self.dir_metadict.items():
@@ -50,30 +61,47 @@ class SimplePathParser(object):
             
 
 class NetCDFFileHandler(object):
-    CONTAINER_DATA_DIR = '/data/'
+    """This file runs in a docker container and has no access to the complete files system.
+    The user defines a directory from which we will be crawling. We passed the relative
+    path to it in an environmental variable and started crawling from there.
+    This is sadly not enough for symlinks as they might point somewhere else.
+    We will be assuming the file is within bounds, which means both the target and the source are accessible from the same
+    root directory."""
+    CONTAINER_DATA_ROOT = '/data_root'
+    HOST_DATA_ROOT_VAR = 'DATA_ROOT'
     HOST_DATA_DIR_VAR = 'DATA_PATH'
     EXTRA = '__extra'
     REMOTE_ENV = dict(DOCKER_LOCALIP='host_ip',
                     DOCKER_LOCALHOSTNAME='hostname')
 
-    def __init__(self, path_parser = None):
+    def __init__(self, path_parser = None, json_dump_dir = None):
         self.path_parser = path_parser
         self.default = {}
         self.default[NetCDFFileHandler.EXTRA] = {'created' : datetime.datetime.utcnow().isoformat()}
         for env_name, prop_name in NetCDFFileHandler.REMOTE_ENV.items():
             if env_name in os.environ:
                 self.default[NetCDFFileHandler.EXTRA][prop_name] = os.environ[env_name]
+        self._realpath = os.getenv(NetCDFFileHandler.HOST_DATA_DIR_VAR)
+        if self._realpath is not None and self._realpath.strip():
+            #use only the first directory
+            self._realpath = '/' + self._realpath.split('/')[1]
+            #self._localpath = os.path.join(NetCDFFileHandler.CONTAINER_DATA_ROOT, *self._realpath.split('/')[2:])
+            self._localpath = os.getenv(NetCDFFileHandler.HOST_DATA_ROOT_VAR, NetCDFFileHandler.CONTAINER_DATA_ROOT)
+        else:
+            #this means we will have no container <-> host mapping
+            self._localpath = None
+            self._realpath = None
+        self.json_dump_dir = json_dump_dir
+        self.logger = logging.getLogger('NetCDFFileHandler')
+
+        self.logger.debug("Init with realpath:%s, localpath:%s, jsondump:%s", self._realpath, self._localpath, self.json_dump_dir)
 
     def __get_id(self, meta):
         "The id is build from the hostname (if present) + ':' + the file path"
         return '%s:%s' % (meta[NetCDFFileHandler.EXTRA].get('hostname'), meta[NetCDFFileHandler.EXTRA]['original_path'])
 
-    def __extract_from_filename(self, filename):
-        
-        realpath = os.path.abspath(filename)
-        if realpath.startswith(NetCDFFileHandler.CONTAINER_DATA_DIR):
-            realpath = os.path.join(os.getenv(NetCDFFileHandler.HOST_DATA_DIR_VAR),
-                                    realpath[len(NetCDFFileHandler.CONTAINER_DATA_DIR):])
+    def __extract_from_filename(self, realpath):
+        "The filename must be absolute"
         if self.path_parser is not None:
             meta = self.path_parser.extract(realpath)
         else:
@@ -116,11 +144,71 @@ class NetCDFFileHandler(object):
                     try:
                         yield self.get_metadata(current)
                     except Exception as e:
-                        logging.log(logging.ERROR, "Could not process %s (%s)" % (f, e)) 
+                        self.logger.error("Could not process %s (%s)", current, e)
+    
+    def _to_localpath(self, realpath):
+        'Transform to a local path (within container) if applicable'
+        if self._realpath is not None and realpath.startswith(self._realpath):
+            return self._localpath + realpath[len(self._realpath):]
+        #don't convert anything else
+        return realpath
+
+    def _to_realpath(self, localpath):
+        'Transform to a real path (outside of container) if applicable'
+        if self._localpath is not None and localpath.startswith(self._localpath):
+            return self._realpath + localpath[len(self._localpath):]
+        #don't convert anything else
+        return localpath
+
+    def _get_final_path(self, filename):
+        """returns the path behind which a file can be read, i.e. resolved from all links"""
+        last=None
+        max_recursion=10
+        orig_filename=filename
+        while filename != last:
+            max_recursion -= 1
+            if max_recursion == 0:
+                raise Exception("Could not resolve link %s" % orig_filename)
+            self.logger.debug("resolving %s", filename)
+            last = filename
+            if os.path.islink(filename):
+                #read the link (the real path) and convert it to local so we can read it from within the container.
+                #might be relative or a full path, readlink return the last non link full path but since we have a different
+                #directory structure inside the container, some steps might be broke, so we have to iterate mapping them
+                #back to the container internal structure.
+                filename = os.path.join(os.path.dirname(filename), os.readlink(filename))
+            
+            filename = self._to_localpath(filename)
+        return filename
+
+    def _get_json_dump_location(self, localpath):
+        'Returns the location where the json dump file should be created.'
+        filename = self.json_dump_dir + localpath + '.json'
+        dirs = os.path.dirname(filename)
+        try:
+            os.makedirs(dirs)
+        except OSError as exc: # Python >2.5
+            if exc.errno == errno.EEXIST and os.path.isdir(dirs):
+                pass
+            else: 
+                raise
+        return filename
 
     def get_metadata(self, filename):
-        meta = utils.dict_merge({}, self.default, self.__extract_from_filename(filename))
-        with Dataset(filename, 'r') as f:
+        "Extracts the metadata from the given local file (might be symlink, or non canonical)"
+        #absolute local path (local is within container)
+        localpath = os.path.abspath(filename)
+        #locapath to real path (skipping links)
+        finalpath = self._get_final_path(localpath)
+        #the complete realpath on the host (non resolved in case of symlink)
+        realpath = self._to_realpath(localpath)
+
+        self.logger.debug("localpath: %s, finalpath: %s, realpath: %s", localpath, finalpath, realpath)
+        
+        meta = utils.dict_merge({}, self.default, self.__extract_from_filename(realpath))
+        #we should read the real file, which might be something completely different as a target of a symlink
+        #basically we get the metadata from the link and the data from the target
+        with Dataset(finalpath, 'r') as f:
             meta['global'] = {}
             for g_att in f.ncattrs():
                 meta['global'][str(g_att)] = getattr(f, g_att)
@@ -133,5 +221,17 @@ class NetCDFFileHandler(object):
 
         #the id will be removed when publishing and used as such
         meta[NetCDFFileHandler.EXTRA]['_id'] = self.__get_id(meta)
+        if self.json_dump_dir is not None:
+            meta_json = json.dumps(meta, indent=2, cls=SetEncoder)
+            json_file = self._get_json_dump_location(realpath)
+            try:
+                self.logger.debug("Dumping json file to: %s", json_file)
+                with open( json_file, 'w') as f:
+                    f.write(meta_json)
+            except Exception as e:
+                #we try to write in localpath and report the error in realpath... that is sadly intentional
+                #as the localpath is the internal representation of the realpath, which is the only thing the user
+                #will ever see.
+                self.logger.error('Could not write file %s: %s', json_file, e)
         return meta
     

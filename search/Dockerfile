@@ -71,4 +71,4 @@ ADD container/boot /container/boot
 EXPOSE 9200 9300 10101
 
 #setting up the node
-#ENV CONF_DIR /config # not working wihtout the initd script, cannot find it..
+ENV CONF_DIR /config # not working wihtout the initd script, cannot find it..

@@ -2,17 +2,12 @@
 
 import sys, os
 import json
+import logging
 
 import utils
-from publisher import SimplePathParser, NetCDFFileHandler
-from es_api import ESFactory
+from publisher import SimplePathParser, NetCDFFileHandler, SetEncoder
+from es_api import ESFactory, ES
 
-class SetEncoder(json.JSONEncoder):
-    def default(self, obj):
-        try:
-            return json.JSONEncoder.default(self, obj)
-        except:
-            return str(obj)
 
 def process(meta, elasticsearch, global_att, show=True, rename_dict={}):
     """meta :=  the complete metadata dictionary that will be stored
@@ -29,6 +24,7 @@ def process(meta, elasticsearch, global_att, show=True, rename_dict={}):
     if show:
         print meta_json
     if elasticsearch:
+        #trying some workaround because of serialization
         elasticsearch.publish(json.loads(meta_json))
 
 def main(orig_args=sys.argv[1:]):
@@ -53,11 +49,13 @@ def main(orig_args=sys.argv[1:]):
     import argparse
     parser = argparse.ArgumentParser(description='Extracts metadata from Netcdf files')
     parser.add_argument('files', metavar="FILE/DIR", nargs=1)
+    parser.add_argument('-d', '--debug', action='store_true', help='show debug info')
+    parser.add_argument('--log-level', help='set some specific log level')
     parser.add_argument('--show', action='store_true', help='show produced json')
     parser.add_argument('--dry-run', action='store_true', help="Don't publish anything")
+    parser.add_argument('--json_dump_dir', help='Dump the generated json files to this dir (generate same directory structure as real path)')
     parser.add_argument('-n', metavar='CONTAINER', help='Contair name with an elasticsearch instance running in it where we will be publishing')
     parser.add_argument('-p', '--port', type=int, help='Elastic search port (default 9200)', default=9200)
-    #parser.add_argument('--dump', help='Directory where json will get dumped')
     #This is not used here, but used by the calling script. Still we want to show a single help.
     parser.add_argument('--host', help='Elastic search host')
     parser.add_argument('--global', help='Adds some gobal attribute using "=" as separator (e.g. --global institute=AWI). Can be used multiple times.')
@@ -68,6 +66,19 @@ def main(orig_args=sys.argv[1:]):
     parser.add_argument('--include-crawl', help='Include only the given regular expression while  crawling')
 
     pargs = parser.parse_args(args)
+    
+
+    if pargs.debug:
+        logging.basicConfig(level=logging.DEBUG)
+    elif pargs.log_level:
+        numeric_level = getattr(logging, pargs.log_level.upper(), None)
+        if not isinstance(numeric_level, int):
+                raise ValueError('Invalid log level: %s' % loglevel)
+        logging.basicConfig(level=numeric_level)
+    
+    #make sure we have some default logger or configure one.
+    if not logging.getLogger().handlers:
+        logging.basicConfig()
 
     #handle input properly
     if pargs.dir_structure is not None or pargs.file_structure is not None:
@@ -76,7 +87,7 @@ def main(orig_args=sys.argv[1:]):
                                         file_sep=pargs.file_structure_sep)
     else:
         path_parser = None
-    handler = NetCDFFileHandler(path_parser=path_parser)
+    handler = NetCDFFileHandler(path_parser=path_parser, json_dump_dir=pargs.json_dump_dir)
 
     exclude = []
     include = None

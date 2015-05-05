@@ -34,15 +34,32 @@ def main(args=sys.argv[1:]):
     else:
         es = ESFactory.fromDockerEnvironment()
     
+    batch=100
+    offset=0
+    
     options={}
     if not pargs.all:
         options['fields']='__extra.original_path'
     if pargs.ids:
-        handle_results(es.get(pargs.ids, **options), pargs, full=pargs.full)
+        result = es.get(pargs.ids, size=batch, offset=offset, **options)
+        total=result['hits']['total']
+        while offset < total:
+            offset += batch
+            handle_results(result, pargs, full=pargs.full)
+            result = es.get(pargs.ids, size=batch, offset=offset, **options)
+        if result:
+            handle_results(result, pargs, full=pargs.full)
     if pargs.full_query:
         handle_results(es.search(pargs.full_query, **options), pargs, full=pargs.full)
     if pargs.query:
-        handle_results(es.basicSearch(pargs.query, **options), pargs, full=pargs.full)
+        result = es.basicSearch(pargs.query, size=batch, from_=offset, **options)
+        total=result['hits']['total']
+        while offset < total:
+            offset += batch
+            handle_results(result, pargs, full=pargs.full)
+            result = es.basicSearch(pargs.query, size=batch, from_=offset, **options)
+        if result:
+            handle_results(result, pargs, full=pargs.full)
         
 if __name__ == '__main__':
     main()

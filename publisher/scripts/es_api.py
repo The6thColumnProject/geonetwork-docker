@@ -2,6 +2,7 @@
 from elasticsearch import Elasticsearch
 from datetime import datetime
 import os
+import logging
 
 class ESFactory(object):
     
@@ -37,6 +38,7 @@ class ES(object):
 
     def __init__(self, connector):
         self.es = connector
+        self.logger = logging.getLogger('ES')
 
     def getId(self, data):
         "Extract an id for the given data"
@@ -52,7 +54,9 @@ class ES(object):
               
     def publish(self, values):
         "publish the dictionary in values to elastic search"
-        return self.es.index(index=ES.INDEX, doc_type=ES.FILE_TYPE, id=self.getId(values), body=values)
+        doc_id = self.getId(values)
+        self.logger.info("Publishing %s", doc_id)
+        return self.es.index(index=ES.INDEX, doc_type=ES.FILE_TYPE, id=doc_id, body=values)
 
     def get(self, id, **options):
         "Get the document for the given id"
