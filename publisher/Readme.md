@@ -145,14 +145,28 @@ The `-D` flag is sharing the given directory and mounting it in /data inside the
 query
 -----
 
-Used for searching in elastic search. Be warned that this script runs within a container,
+The small query script can be used for basic searching.  It demonstrates howto make elasticsearch query calls in code.  Be warned that this script runs within a container,
 i.e. the network you see is not the same this container will see.
 
-Usage similar to nc2es. Here an example:
+Here is a simple use against a local search node deployed in a container:
+(Searches for all documents in the t1 container)
 ```bash
 $> bin/query -n t1 -q '*:*'
 ```
-Searches for all documents in the t1 container.
+
+To search over a deployed search cluster, Ex:
+```bash
+%> bin/query -q '*:*' --host 10.0.0.238 -p 9200
+```
+
+The output is the full absolute path of the files that match the criteria:
+
+```bash
+/g/data1/ua6/drstree/CMIP5/GCM/CSIRO-BOM/ACCESS1-0/historical/mon/ocean/thetao/r1i1p1/thetao_Omon_ACCESS1-0_historical_r1i1p1_195001-195412.nc
+/g/data1/ua6/drstree/CMIP5/GCM/CSIRO-BOM/ACCESS1-0/historical/mon/ocean/thetao/r1i1p1/thetao_Omon_ACCESS1-0_historical_r1i1p1_194001-194412.nc
+/g/data1/ua6/drstree/CMIP5/GCM/CSIRO-BOM/ACCESS1-0/historical/mon/ocean/thetao/r1i1p1/thetao_Omon_ACCESS1-0_historical_r1i1p1_186501-186912.nc
+...
+```
 
 Query (using RESTful API)
 -----
