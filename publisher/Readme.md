@@ -338,18 +338,6 @@ Resultant Output:
 Basic Use Case
 -----
 
-<<<<<<< HEAD
-* Publish all .nc's linked in /g/data/ua6/drstree/CMIP5/GCM/CSIRO-BOM/ACCESS1-3
-
-```
-%>
-```
-* Find all data with frequency=mon, variable=tos
-
-```
-%>
-```
-=======
 * Publish all .nc's linked in /g/data/ua6/drstree/CMIP5/GCM/CSIRO-BOM/ACCESS1-0/...
 
 	(without stipulating dir structure meta data info)
@@ -483,7 +471,7 @@ INFO:elasticsearch.trace:curl -XPUT 'http://localhost:9200/geonetwork/file/es.no
   }
 }
 ```
-* Search query (plush grepp'ing around) to show *.nc files
+* Search query (plus grepp'ing around) to show *.nc files
 
 ```
 %> curl -s -X POST 'http://10.0.0.238:9200/_search?size=50000' -d '{"query" : {"match_all":{}}}' | python -m json.tool | grep _id | grep '.nc'
@@ -495,6 +483,11 @@ INFO:elasticsearch.trace:curl -XPUT 'http://localhost:9200/geonetwork/file/es.no
 "_id": "es.novalocal:/g/data1/ua6/drstree/CMIP5/GCM/CSIRO-BOM/ACCESS1-0/historical/mon/ocean/thetao/r1i1p1/thetao_Omon_ACCESS1-0_historical_r1i1p1_191501-191912.nc",
 ```
 
+* Using directory structure to glean additionl metadata to harvest into the publication to the index.
+
+```
+%> ./bin/nc2es --host 10.0.0.238 -p 9200 --dir-structure '/*/*/*/*/activity/*/institute/model/experiment/frequency/realm/variable/ensemble' --include-crawl '.*.nc$' --log-level info --json_dump_dir /tmp/json_dumps /g/data1/ua6/drstree/CMIP5/GCM/CSIRO-BOM/ACCESS1-0/historical/mon/ocean/thetao/r1i1p1
+```
 
 General Operations
 ------
