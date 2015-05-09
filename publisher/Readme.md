@@ -84,7 +84,7 @@ optional arguments:
   --host HOST           Elastic search host
 ```
 `nc2json` is a convenience script that already defines `--show` `--dry-run`. There's
-no point in definin elast search parameters but you may define the rest.
+no point in defining elasticsearch parameters but you may define the rest.
 
 A more elaborate example:
 ```bash
@@ -127,7 +127,7 @@ For this there are two main usages:
     $> bin/nc2es -n some_container [options like nc2json]
     ```
 
-2. For connecting to some external instance (be warn that this is run within a container, so it might not see what you think)
+2. For connecting to some external instance (note: this is run within a container, within which the network may be different than what you host sees)
 
     ```bash
     $> bin/nc2es --host elasticsearch.host -p 9200 [options like nc2json]
@@ -470,21 +470,6 @@ INFO:elasticsearch.trace:curl -XPUT 'http://localhost:9200/geonetwork/file/es.no
 ```
 
 
-* Get the count of what is in the index
-
-```
-%>curl -s -X POST 'http://10.0.0.238:9200/_count?pretty' -d '{"query" : {"match_all":{}}}'
-```
-```
-{
-  "count" : 32,
-  "_shards" : {
-    "total" : 5,
-    "successful" : 5,
-    "failed" : 0
-  }
-}
-```
 * Search query (plus grepp'ing around) to show *.nc files
 
 ```
@@ -506,11 +491,28 @@ INFO:elasticsearch.trace:curl -XPUT 'http://localhost:9200/geonetwork/file/es.no
 General Operations
 ------
 
+* Get the count of what is in the index
+
+```
+%>curl -s -X POST 'http://10.0.0.238:9200/_count?pretty' -d '{"query" : {"match_all":{}}}'
+```
+```
+{
+  "count" : 32,
+  "_shards" : {
+    "total" : 5,
+    "successful" : 5,
+    "failed" : 0
+  }
+}
+```
+
 * Delete an index
 
 ```
 %> curl -s -X DELETE 'http://10.0.0.238:9200/geonetwork'
 ```
+
 
 ### Notes n' Links
 
